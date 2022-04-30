@@ -1,4 +1,3 @@
-from mechanize import ScalarControl
 import pygame
 from pygame.locals import *;
 import os;
@@ -6,10 +5,29 @@ import os;
 
 pygame.init()
 
+
+
 WIDTH = 1200
 HEIGHT = 800
 SCREEN = pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption("Level Editor")
+
+clock = pygame.time.Clock()
+
+# // COORDINATIVE LOGIC
+WORLDCENTERPOS=[WIDTH//2,HEIGHT//2]
+dif = 0
+difY= 0
+# // COORDINATIVE LOGIC END
+
+
+
+
+
+mainFont = pygame.font.Font('fonts/pixel.ttf', 16)
+cordinates = "x 0  y 0" 
+label = mainFont.render(cordinates, False, ((244,244,235)))
+
 
 imagesInCurDir = os.listdir(os.curdir+"/graphics")
 possesInCurDir = []
@@ -68,6 +86,14 @@ with open("graphics/data.txt","r") as file:
 
 file.close()
 
+tilezToRemove = []
+for r in range(1,len(tiles)):
+    if tiles[r] == tiles[r-1]:
+        tilezToRemove.append(tiles[r-1])
+    
+for g in tilezToRemove:
+    tiles.remove(g)
+
 
 MENUMAXX = WIDTH//2-WIDTH//3;
 
@@ -77,6 +103,8 @@ running = True
 
 while(running):
     SCREEN.fill((0,0,0))
+    mp = pygame.mouse.get_pos()
+    mousePos = [mp[0]-dif, mp[1]-difY]
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
 
@@ -101,18 +129,18 @@ while(running):
             
             running = False
         if event.type == pygame.MOUSEBUTTONUP:
-            mousePos = pygame.mouse.get_pos();
-            if (mousePos[0] > MENUMAXX):
+            
+            if (mp[0] > MENUMAXX):
                 if event.button == 3:
+                    tilesToRemove = []
                     for i in range(len(tiles)):
                         m = pygame.image.load("graphics/"+tiles[i][2])
                         recx = m.get_rect(topleft=(int(tiles[i][0]),int(tiles[i][1])))
                         if pygame.rect.Rect.collidepoint(recx,mousePos[0],mousePos[1]):
-                            tiles.remove(tiles[i])
-                            print("Collision")
-                            break
+                            tilesToRemove.append(tiles[i])
+                    for til in tilesToRemove:
+                        tiles.remove(til)
                 elif (curSelectedTile != None):
-                    print("Place Tile In Editor Graphic Space!")
                     with open("graphics/data.txt", "w") as dataFile:
                         dataFile.write(TheContentIs)
                         dataFile.write("#")
@@ -124,32 +152,39 @@ while(running):
                         dataFile.write("#")
                         dataFile.write(f"{curSelectedTile}")
                         dataFile.write("#")
-                    
                     tiles.append([mousePos[0],mousePos[1],curSelectedTile])
 
                     with open("graphics/data.txt", "r") as dataFile:
                         for line in dataFile:
                             TheContentIs = line
-                        
-
             else:
                 for i in range(len(imagesInCurDir)):
                     recx = possesInCurDir[i]
-                    if pygame.rect.Rect.collidepoint(recx,mousePos[0],mousePos[1]):
+                    if pygame.rect.Rect.collidepoint(recx,mp[0],mp[1]):
                         curSelectedTile = imagesInCurDir[i]
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_RIGHT]:
+        WORLDCENTERPOS[0]+=5
+        dif += 5
+    if keys[pygame.K_LEFT]:
+        WORLDCENTERPOS[0]-=5
+        dif -= 5
+    if keys[pygame.K_UP]:
+        WORLDCENTERPOS[1]-=5
+        difY -= 5
+    if keys[pygame.K_DOWN]:
+        WORLDCENTERPOS[1]+=5
+        difY += 5
 
 
     # Draw Tiles
-
     for t in tiles:
         ImageSource = t[2];
-        PosX = t[0]
-        PosY = t[1]
-
-
+        PosX = int(t[0])+dif
+        PosY = int(t[1])+difY
         img = pygame.image.load(f"graphics/{ImageSource}")
-        SCREEN.blit(img,(int(PosX),int(PosY)))
-
+        SCREEN.blit(img,((PosX),(PosY)))
     #
 
     pygame.draw.rect(SCREEN, ((106,105,104)), (0,0,MENUMAXX,HEIGHT))
@@ -160,9 +195,12 @@ while(running):
         y+=pygame.image.load(f"graphics/{content}").get_width()
         y+=30
 
+    label = mainFont.render(f"x {mousePos[0]-WORLDCENTERPOS[0]}  y {mousePos[1]-WORLDCENTERPOS[1]}",False,((244,244,235)))
+    SCREEN.blit(label, (0,0))
 
 
     pygame.display.update()
+    clock.tick(30)
 
 
 pygame.quit()
