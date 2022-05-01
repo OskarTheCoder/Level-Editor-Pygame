@@ -2,6 +2,8 @@ import pygame
 from pygame.locals import *;
 import os;
 
+# More levels = less Data
+
 
 pygame.init()
 
@@ -20,7 +22,28 @@ dif = 0
 difY= 0
 # // COORDINATIVE LOGIC END
 
+def drawgrid(d,dY, screen):
+    gridSize = 32
 
+    movedX = d
+    movedY = dY
+
+    #movedX-=gridSize
+
+    #movedY-=gridSize
+
+    mD = movedX//32
+    movedX -= 32 *mD
+
+    mDy = movedY//32
+    movedY -= 32 *mDy
+
+
+    for n in range(-1, WIDTH//gridSize + 1):
+        pygame.draw.line(screen, ((201,200,199)), (n*gridSize + movedX, 0), (n*gridSize + movedX, HEIGHT))
+    
+    for m in range(-1, HEIGHT//gridSize + 1):
+        pygame.draw.line(screen, ((199,200,201)), (0, m*gridSize + movedY), (WIDTH, m*gridSize + movedY))
 
 
 
@@ -94,6 +117,8 @@ for r in range(1,len(tiles)):
 for g in tilezToRemove:
     tiles.remove(g)
 
+show = True
+
 
 MENUMAXX = WIDTH//2-WIDTH//3;
 
@@ -106,22 +131,27 @@ while(running):
     mp = pygame.mouse.get_pos()
     mousePos = [mp[0]-dif, mp[1]-difY]
     for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_g or event.key == pygame.K_t:
+                show = not show
+            if event.key == pygame.K_q and len(tiles) > 0:
+                tiles.remove(tiles[-1])
+
         if event.type == pygame.QUIT:
 
             save = ""
             for t in tiles:
-                for i in range(2):
-                    save+="#"
-                    save+=f"{t[0]}"
-                    save+="#"
+                save+="#"
+                save+=f"{t[0]}"
+                save+="#"
 
-                    save+="#"
-                    save+=f"{t[1]}"
-                    save+="#"
+                save+="#"
+                save+=f"{t[1]}"
+                save+="#"
 
-                    save+="#"
-                    save+=f"{t[2]}"
-                    save+="#"
+                save+="#"
+                save+=f"{t[2]}"
+                save+="#"
             
             with open("graphics/data.txt", "w") as File:
                 File.write(save)
@@ -141,6 +171,11 @@ while(running):
                     for til in tilesToRemove:
                         tiles.remove(til)
                 elif (curSelectedTile != None):
+                    if show:
+                        mousePos[0] = mousePos[0] // 32
+                        mousePos[0] = mousePos[0] * 32
+                        mousePos[1] = mousePos[1] // 32
+                        mousePos[1] = mousePos[1] * 32
                     with open("graphics/data.txt", "w") as dataFile:
                         dataFile.write(TheContentIs)
                         dataFile.write("#")
@@ -166,16 +201,16 @@ while(running):
     keys = pygame.key.get_pressed()
     if keys[pygame.K_RIGHT]:
         WORLDCENTERPOS[0]+=5
-        dif += 5
+        dif -= 5
     if keys[pygame.K_LEFT]:
         WORLDCENTERPOS[0]-=5
-        dif -= 5
+        dif += 5
     if keys[pygame.K_UP]:
         WORLDCENTERPOS[1]-=5
-        difY -= 5
+        difY += 5
     if keys[pygame.K_DOWN]:
         WORLDCENTERPOS[1]+=5
-        difY += 5
+        difY -= 5
 
 
     # Draw Tiles
@@ -187,6 +222,9 @@ while(running):
         SCREEN.blit(img,((PosX),(PosY)))
     #
 
+    if show:
+        drawgrid(dif,difY,SCREEN)
+
     pygame.draw.rect(SCREEN, ((106,105,104)), (0,0,MENUMAXX,HEIGHT))
 
     y = 100
@@ -195,8 +233,10 @@ while(running):
         y+=pygame.image.load(f"graphics/{content}").get_width()
         y+=30
 
-    label = mainFont.render(f"x {mousePos[0]-WORLDCENTERPOS[0]}  y {mousePos[1]-WORLDCENTERPOS[1]}",False,((244,244,235)))
+    label = mainFont.render(f"x {mousePos[0]-dif}  y {mousePos[1]-difY}",True,((244,244,235)))
     SCREEN.blit(label, (0,0))
+
+
 
 
     pygame.display.update()
