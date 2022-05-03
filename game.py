@@ -34,7 +34,7 @@ with open("team.txt", "r") as team:
                     curPixelMon.append(curStat)
                     curStat = ""
                     i+=1
-                    if  i > 6:
+                    if  i > 8:
                         playerteam.append(curPixelMon)
                         curPixelMon = []
 
@@ -45,8 +45,8 @@ print(playerteam)
 PlayerTeam = []
 for t in range(len(playerteam)):
     PlayerTeam.append([])
-    PlayerTeam[-1].append(PIXELMON(playerteam[t][0], [int(playerteam[t][1]),int(playerteam[t][2]),int(playerteam[t][3]),int(playerteam[t][4]),int(playerteam[t][5]),int(playerteam[t][6])]))
-    print(PlayerTeam[-1][-1].pixelmon_name)
+    PlayerTeam[-1].append(PIXELMON(playerteam[t][0], [int(playerteam[t][1]),int(playerteam[t][2]),int(playerteam[t][3]),int(playerteam[t][4]),int(playerteam[t][5]), int(playerteam[t][6])], int(playerteam[t][7]),-1000))
+    print(PlayerTeam[-1][-1].level)
 
 
 
@@ -196,7 +196,7 @@ def encounter(SCREEN, area):
     #
 
     pixelmon_encountered = getPixelmon(area)
-    mon = PIXELMON(pixelmon_encountered,baseStats[pixelmon_encountered])
+    mon = PIXELMON(pixelmon_encountered,baseStats[pixelmon_encountered], random.choice(baseLevels[pixelmon_encountered]),-1000)
 
     PlayerCurrentMon = PlayerTeam[0][0]
 
@@ -207,9 +207,16 @@ def encounter(SCREEN, area):
     hp_label = mainFont.render("HP: "+str(hp),True,((0,0,0)))
     hp_label_pos = (WIDTH-WIDTH//3,HEIGHT//8)
 
+    enemy_name_label = mainFont.render(str(mon.pixelmon_name)+" Lvl "+str(mon.level),True,((0,0,0)))
+    enemy_name_label_pos = (WIDTH-WIDTH//3,HEIGHT//8-60)
+
     player_hp = PlayerCurrentMon.maxhealth
     player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
     player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)
+
+    player_name = PlayerCurrentMon.pixelmon_name
+    player_name_label = mainFont.render(str(player_name)+" Lvl "+str(PlayerCurrentMon.level),True,((0,0,0)))
+    player_name_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3-60)
 
 
     attackbuttonwidth = WIDTH//4
@@ -224,8 +231,15 @@ def encounter(SCREEN, area):
 
 
     # Start Encounter
+    turn = ""
+    if PlayerCurrentMon.speed >= mon.speed:
+        turn = "player"
+    else:
+        turn = "enemy"
 
-    print(pixelmon_encountered)
+    wait = False
+
+    #print(pixelmon_encountered)
 
     run = True
     while run:
@@ -234,8 +248,12 @@ def encounter(SCREEN, area):
                 return -1
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mousePos = pygame.mouse.get_pos()
-                if pygame.rect.Rect.collidepoint(pygame.rect.Rect(attackbuttonrect[0],attackbuttonrect[1],attackbuttonrect[2],attackbuttonrect[3]), mousePos[0], mousePos[1]):
-                    print("Attack-ing!")
+                if not wait and pygame.rect.Rect.collidepoint(pygame.rect.Rect(attackbuttonrect[0],attackbuttonrect[1],attackbuttonrect[2],attackbuttonrect[3]), mousePos[0], mousePos[1]):
+                    if turn == "player":
+                        mon.curhealth-=5
+                        hp = mon.curhealth
+                        hp_label = mainFont.render("HP: "+str(hp),True,((0,0,0)))
+                        hp_label_pos = (WIDTH-WIDTH//3,HEIGHT//8)
 
 
         SCREEN.fill((255,255,255))
@@ -245,6 +263,8 @@ def encounter(SCREEN, area):
         SCREEN.blit(player_hp_label, player_hp_label_pos)
         pygame.draw.rect(SCREEN, ((203,10,0)), attackbuttonrect)
         SCREEN.blit(attackbuttonlabel, (attackbuttonrect[0]+32,attackbuttonrect[1]+32))    
+        SCREEN.blit(player_name_label, player_name_label_pos)
+        SCREEN.blit(enemy_name_label, enemy_name_label_pos)
 
         # FIGHT WILD POKEMON
 
