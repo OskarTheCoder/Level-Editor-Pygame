@@ -1,18 +1,64 @@
 import pygame
 from pygame.locals import *;
+from pygame import mixer;
 import random
 import time
+from pixelmondata import *;
 
-# Level 1 == "data"
+pygame.init()
+pygame.mixer.init()
+
+mainFont = pygame.font.Font("fonts/pixel.ttf",32)
+
+# Testing Scene == "data"
 area = "data"
+
+
+# LOAD TEAM
+
+playerteam = []
+curPixelMon = []
+curStat = ""
+i = 0
+start = False
+with open("team.txt", "r") as team:
+    for line in team:
+        for char in line:
+            print(char)
+            if not start:
+                if char == "#":
+                    start = True
+            else:
+                if char == "#":
+                    start = False
+                    curPixelMon.append(curStat)
+                    curStat = ""
+                    i+=1
+                    if  i > 6:
+                        playerteam.append(curPixelMon)
+                        curPixelMon = []
+
+                else:
+                    curStat += char
+
+print(playerteam)
+PlayerTeam = []
+for t in range(len(playerteam)):
+    PlayerTeam.append([])
+    PlayerTeam[-1].append(PIXELMON(playerteam[t][0], [int(playerteam[t][1]),int(playerteam[t][2]),int(playerteam[t][3]),int(playerteam[t][4]),int(playerteam[t][5]),int(playerteam[t][6])]))
+    print(PlayerTeam[-1][-1].pixelmon_name)
+
+
 
 class PLAYER():
     def __init__(self, pos, speed):
-        self.down = [pygame.image.load("player/player_down_1.png")]
-        self.img = pygame.transform.scale( self.down[0], (24,34) )
+        self.down = [pygame.transform.scale(pygame.image.load("player/player_down_1.png"), (24,34) ),pygame.transform.scale(pygame.image.load("player/player_down_2.png"), (24,34) ),pygame.transform.scale(pygame.image.load("player/player_down_3.png"), (24,34) ),pygame.transform.scale(pygame.image.load("player/player_down_4.png"), (24,34) )]
+        self.up = [pygame.transform.scale(pygame.image.load("player/player_up_1.png"), (24,34) ),pygame.transform.scale(pygame.image.load("player/player_up_2.png"), (24,34) ),pygame.transform.scale(pygame.image.load("player/player_up_3.png"), (24,34) ),pygame.transform.scale(pygame.image.load("player/player_up_4.png"), (24,34) )]
+        self.right = [pygame.transform.scale(pygame.image.load("player/player_right_1.png"), (24,34) ),pygame.transform.scale(pygame.image.load("player/player_right_2.png"), (24,34) ),pygame.transform.scale(pygame.image.load("player/player_right_3.png"), (24,34) ),pygame.transform.scale(pygame.image.load("player/player_right_4.png"), (24,34) )]
+        self.left = [pygame.transform.scale(pygame.image.load("player/player_left_1.png"), (24,34) ),pygame.transform.scale(pygame.image.load("player/player_left_2.png"), (24,34) ),pygame.transform.scale(pygame.image.load("player/player_left_3.png"), (24,34) ),pygame.transform.scale(pygame.image.load("player/player_left_4.png"), (24,34) )]
+        self.img = self.down[0]
         self.pos = pos
-        self.dirX = 0
-        self.dirY = 0
+        self.dir = 0
         self.speed = speed
         self.tick = 0
 
@@ -20,7 +66,46 @@ class PLAYER():
         screen.blit(self.img, self.pos)
 
     def move(self):
-        self.tick+=1
+        self.tick+=7
+        if self.tick < 25:
+            if self.dir == 0:
+                self.img = self.down[0]
+            elif self.dir == 1:
+                self.img = self.up[0]
+            elif self.dir == 2:
+                self.img = self.right[0]
+            elif self.dir == 3:
+                self.img = self.left[0]
+        elif self.tick < 50:
+            if self.dir == 0:
+                self.img = self.down[1]
+            elif self.dir == 1:
+                self.img = self.up[1]
+            elif self.dir == 2:
+                self.img = self.right[1]
+            elif self.dir == 3:
+                self.img = self.left[1]
+        elif self.tick < 75:
+            if self.dir == 0:
+                self.img = self.down[2]
+            elif self.dir == 1:
+                self.img = self.up[2]
+            elif self.dir == 2:
+                self.img = self.right[2]
+            elif self.dir == 3:
+                self.img = self.left[2]
+        elif self.tick < 100:
+            if self.dir == 0:
+                self.img = self.down[3]
+            elif self.dir == 1:
+                self.img = self.up[3]
+            elif self.dir == 2:
+                self.img = self.right[3]
+            elif self.dir == 3:
+                self.img = self.left[3]
+        else:
+            self.tick = 0
+
 
 
     def collision(self, other):
@@ -67,11 +152,16 @@ for g in tilezToRemove:
 
 steps = 0
 
+playingMusic = False
+def getMusic(area):
+    if area == "data":
+        return "105 Littleroot Town"
+
 def getPixelmon(area):
-    return "Pixelmon"
+    if area == "data":
+        return random.choice(listOfPixelmons)[0]
 
 def calculateChance(steps):
-    print(steps)
     chance = 1 + (steps*2)//5
     num = random.randint(1,1000)
     if num <= chance:
@@ -80,15 +170,15 @@ def calculateChance(steps):
         return False
 
 def encounter(SCREEN, area):
-    print("Encounter Started!")
      
+    # Play The Animation
+
     xx = 0
     xX = WIDTH-WIDTH//10
 
     yy = 0
     yY = HEIGHT-HEIGHT//10
 
-    # Play The Animation
     for i in range(5):
         pygame.draw.rect(SCREEN, ((255,255,255)), (xx,0,WIDTH//10,HEIGHT))
         pygame.draw.rect(SCREEN, ((255,255,255)), (xX,0,WIDTH//10,HEIGHT))
@@ -101,20 +191,74 @@ def encounter(SCREEN, area):
         yy += HEIGHT//10
         yY -= HEIGHT//10
         pygame.display.update()
-        time.sleep(1)   
+        time.sleep(0.5)   
+    
     #
-
-    pixelmon_encountered = ""
-    # Start Encounter
 
     pixelmon_encountered = getPixelmon(area)
+    mon = PIXELMON(pixelmon_encountered,baseStats[pixelmon_encountered])
 
-    
+    PlayerCurrentMon = PlayerTeam[0][0]
+
+
+    # MAKE UI CONTENT
+
+    hp = mon.maxhealth
+    hp_label = mainFont.render("HP: "+str(hp),True,((0,0,0)))
+    hp_label_pos = (WIDTH-WIDTH//3,HEIGHT//8)
+
+    player_hp = PlayerCurrentMon.maxhealth
+    player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
+    player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)
+
+
+    attackbuttonwidth = WIDTH//4
+    attackbuttonrect = (WIDTH-attackbuttonwidth*1.5,HEIGHT-HEIGHT//6,attackbuttonwidth,HEIGHT//7)
+    attackbuttonlabel = mainFont.render("attack", True, ((0,0,0)))
 
 
 
     #
 
+
+
+
+    # Start Encounter
+
+    print(pixelmon_encountered)
+
+    run = True
+    while run:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return -1
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mousePos = pygame.mouse.get_pos()
+                if pygame.rect.Rect.collidepoint(pygame.rect.Rect(attackbuttonrect[0],attackbuttonrect[1],attackbuttonrect[2],attackbuttonrect[3]), mousePos[0], mousePos[1]):
+                    print("Attack-ing!")
+
+
+        SCREEN.fill((255,255,255))
+        SCREEN.blit(mon.img, (WIDTH-WIDTH//4,HEIGHT//5))
+        SCREEN.blit(PlayerCurrentMon.imgback, (WIDTH//4,HEIGHT-HEIGHT//5))
+        SCREEN.blit(hp_label, hp_label_pos)
+        SCREEN.blit(player_hp_label, player_hp_label_pos)
+        pygame.draw.rect(SCREEN, ((203,10,0)), attackbuttonrect)
+        SCREEN.blit(attackbuttonlabel, (attackbuttonrect[0]+32,attackbuttonrect[1]+32))    
+
+        # FIGHT WILD POKEMON
+
+        
+
+        
+        # 
+
+
+        pygame.display.update()
+
+    #
+
+    return 0
 
 
 
@@ -128,7 +272,7 @@ zoom = 0
 scroll = [0, 0]
 
 collidableObjects = ["basicbush.png","basictree.png","basicfence.png","largetree.png"]
-pixelAccounterObjects = ["tallgrass.png"]
+pixelEncounterObjects = ["tallgrass.png"]
 
 curOffsetX = -300
 curOffsetY = -100
@@ -138,6 +282,8 @@ desiredMoveY = 0
 
 Player = PLAYER([WIDTH//2-6, HEIGHT//2-8], 5)
 
+encounter(SCREEN,area)
+
 
 running = True
 while(running):
@@ -146,6 +292,10 @@ while(running):
             running = False
         
     SCREEN.fill((0,0,0))
+    if not playingMusic:
+        music = pygame.mixer.music.load(f"music/{getMusic(area)}.wav")
+        pygame.mixer.music.play(-1)
+        playingMusic = True
 
     desiredMoveX = 0
     desiredMoveY = 0
@@ -155,12 +305,16 @@ while(running):
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:    
         desiredMoveX+=Player.speed
+        Player.dir = 3
     if keys[pygame.K_RIGHT]:    
         desiredMoveX-=Player.speed
+        Player.dir = 2
     if keys[pygame.K_UP]:    
         desiredMoveY+=Player.speed
+        Player.dir = 1
     if keys[pygame.K_DOWN]:    
         desiredMoveY-=Player.speed
+        Player.dir = 0
 
     
 
@@ -174,7 +328,7 @@ while(running):
         if ImageSource in collidableObjects:
             if Player.collision(rect):
                 move = False
-        if ImageSource in pixelAccounterObjects:
+        if ImageSource in pixelEncounterObjects:
             if Player.collision(rect):
                 mightAccounter = True
         
@@ -187,13 +341,43 @@ while(running):
         steps+=1
         if calculateChance(steps):
             steps = 0
-            encounter(SCREEN, area)
+            pygame.mixer.music.stop()
+            music = pygame.mixer.music.load("music/109 Battle! Wild Pokemon.wav")
+            pygame.mixer.music.play()
+            if encounter(SCREEN, area) == -1:
+                running = False
+            pygame.mixer.music.stop()
+            music = pygame.mixer.music.load(f"music/{getMusic(area)}.wav")
+            pygame.mixer.music.play(-1)
     else:
         steps = 0
+
+    if desiredMoveX == 0 and desiredMoveY == 0:
+        if Player.dir == 0:
+            Player.img = Player.down[0]
+        elif Player.dir == 1:
+            Player.img = Player.up[0]
+        elif Player.dir == 2:
+            Player.img = Player.right[0]
+        elif Player.dir == 3:
+            Player.img = Player.left[0]
+        Player.dir = -1
 
     if move:
         curOffsetX += desiredMoveX
         curOffsetY += desiredMoveY
+        if desiredMoveX != 0 or desiredMoveY != 0:
+            Player.move()
+    else:
+        if Player.dir == 0:
+            Player.img = Player.down[0]
+        elif Player.dir == 1:
+            Player.img = Player.up[0]
+        elif Player.dir == 2:
+            Player.img = Player.right[0]
+        elif Player.dir == 3:
+            Player.img = Player.left[0]
+        Player.dir = -1
 
 
 
