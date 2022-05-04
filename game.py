@@ -8,10 +8,14 @@ from pixelmondata import *;
 pygame.init()
 pygame.mixer.init()
 
+clock = pygame.time.Clock()
+
 mainFont = pygame.font.Font("fonts/pixel.ttf",32)
 
 # Testing Scene == "data"
 area = "data"
+
+victoryMusic = pygame.mixer.music.load("music/110 Wild Pokemon Defeated!.wav")
 
 
 # LOAD TEAM
@@ -66,7 +70,7 @@ class PLAYER():
         screen.blit(self.img, self.pos)
 
     def move(self):
-        self.tick+=7
+        self.tick+=4
         if self.tick < 25:
             if self.dir == 0:
                 self.img = self.down[0]
@@ -223,13 +227,6 @@ def encounter(SCREEN, area):
     attackbuttonrect = (WIDTH-attackbuttonwidth*1.5,HEIGHT-HEIGHT//6,attackbuttonwidth,HEIGHT//7)
     attackbuttonlabel = mainFont.render("attack", True, ((0,0,0)))
 
-
-
-    #
-
-
-
-
     # Start Encounter
     turn = ""
     if PlayerCurrentMon.speed >= mon.speed:
@@ -238,6 +235,7 @@ def encounter(SCREEN, area):
         turn = "enemy"
 
     wait = False
+    victory = False
 
     #print(pixelmon_encountered)
 
@@ -247,16 +245,50 @@ def encounter(SCREEN, area):
             if event.type == pygame.QUIT:
                 return -1
             if event.type == pygame.MOUSEBUTTONDOWN:
+                if victory:
+                    pygame.mixer.music.stop()
+                    return 0
                 mousePos = pygame.mouse.get_pos()
-                if not wait and pygame.rect.Rect.collidepoint(pygame.rect.Rect(attackbuttonrect[0],attackbuttonrect[1],attackbuttonrect[2],attackbuttonrect[3]), mousePos[0], mousePos[1]):
+                if not victory and not wait and pygame.rect.Rect.collidepoint(pygame.rect.Rect(attackbuttonrect[0],attackbuttonrect[1],attackbuttonrect[2],attackbuttonrect[3]), mousePos[0], mousePos[1]):
                     if turn == "player":
                         mon.curhealth-=5
+                        if mon.curhealth <= 0:
+                            mon.curhealth = 0
                         hp = mon.curhealth
                         hp_label = mainFont.render("HP: "+str(hp),True,((0,0,0)))
                         hp_label_pos = (WIDTH-WIDTH//3,HEIGHT//8)
+                        if mon.curhealth <= 0:
+                            pygame.mixer.music.load("music/110 Wild Pokemon Defeated!.wav")
+                            pygame.mixer.music.play()
+                            victory = True
+                        PlayerCurrentMon.curhealth -= 5
+                        player_hp = PlayerCurrentMon.curhealth
+                        player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
+                        player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)     
+                        if PlayerCurrentMon.curhealth <= 0:
+                            if len(PlayerTeam)-1 > 0:
+                                PlayerCurrentMon = PlayerTeam[0][1]
+                    else:
+                        PlayerCurrentMon.curhealth -= 5
+                        player_hp = PlayerCurrentMon.curhealth
+                        player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
+                        player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)       
+                        if PlayerCurrentMon.curhealth <= 0:
+                            if len(PlayerTeam)-1 > 0:
+                                PlayerCurrentMon = PlayerTeam[0][1]
+                        mon.curhealth-=5
+                        if mon.curhealth < 0:
+                            mon.curhealth = 0
+                        hp = mon.curhealth
+                        hp_label = mainFont.render("HP: "+str(hp),True,((0,0,0)))
+                        hp_label_pos = (WIDTH-WIDTH//3,HEIGHT//8)
+                        if mon.curhealth <= 0:
+                            pygame.mixer.music.load("music/110 Wild Pokemon Defeated!.wav")
+                            pygame.mixer.music.play()
+                            victory = True
 
 
-        SCREEN.fill((255,255,255))
+        SCREEN.fill((116,200,87))
         SCREEN.blit(mon.img, (WIDTH-WIDTH//4,HEIGHT//5))
         SCREEN.blit(PlayerCurrentMon.imgback, (WIDTH//4,HEIGHT-HEIGHT//5))
         SCREEN.blit(hp_label, hp_label_pos)
@@ -300,9 +332,8 @@ curOffsetY = -100
 desiredMoveX = 0
 desiredMoveY = 0
 
-Player = PLAYER([WIDTH//2-6, HEIGHT//2-8], 5)
+Player = PLAYER([WIDTH//2-6, HEIGHT//2-8], 4)
 
-encounter(SCREEN,area)
 
 
 running = True
@@ -310,8 +341,8 @@ while(running):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        
-    SCREEN.fill((0,0,0))
+    
+    SCREEN.fill((116,200,87))
     if not playingMusic:
         music = pygame.mixer.music.load(f"music/{getMusic(area)}.wav")
         pygame.mixer.music.play(-1)
@@ -403,5 +434,46 @@ while(running):
 
 
     pygame.display.update()
+    clock.tick(40)
+
+
+with open("team.txt","w") as teamFile:
+    
+    for member in PlayerTeam[0]:
+        teamFile.write("#")
+        teamFile.write(member.pixelmon_name)
+        teamFile.write("#")
+
+        teamFile.write("#")
+        teamFile.write(str(member.curhealth))
+        teamFile.write("#")
+
+        teamFile.write("#")
+        teamFile.write(str(member.attack))
+        teamFile.write("#")
+
+        teamFile.write("#")
+        teamFile.write(str(member.defence))
+        teamFile.write("#")
+
+        teamFile.write("#")
+        teamFile.write(str(member.spec_attack))
+        teamFile.write("#")
+
+        teamFile.write("#")
+        teamFile.write(str(member.spec_defence))
+        teamFile.write("#")
+
+        teamFile.write("#")
+        teamFile.write(str(member.speed))
+        teamFile.write("#")
+#abra##25##20##15##105##55##90##15##0#
+        teamFile.write("#")
+        teamFile.write(str(member.level))
+        teamFile.write("#")
+
+        teamFile.write("#")
+        teamFile.write(str(member.exp))
+        teamFile.write("#")
 
 pygame.quit()
