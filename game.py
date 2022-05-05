@@ -4,6 +4,7 @@ from pygame import mixer;
 import random
 import time
 from pixelmondata import *;
+from moves import *;
 
 pygame.init()
 pygame.mixer.init()
@@ -28,7 +29,6 @@ start = False
 with open("team.txt", "r") as team:
     for line in team:
         for char in line:
-            print(char)
             if not start:
                 if char == "#":
                     start = True
@@ -38,20 +38,16 @@ with open("team.txt", "r") as team:
                     curPixelMon.append(curStat)
                     curStat = ""
                     i+=1
-                    if  i > 8:
+                    if  i > 9:
                         playerteam.append(curPixelMon)
                         curPixelMon = []
                         i = 0
-
                 else:
                     curStat += char
-print(playerteam)
 PlayerTeam = []
 for t in range(len(playerteam)):
     PlayerTeam.append([])
-    print(playerteam[t][1])
-    PlayerTeam[-1].append(PIXELMON(playerteam[t][0], [int(playerteam[t][1]),int(playerteam[t][2]),int(playerteam[t][3]),int(playerteam[t][4]),int(playerteam[t][5]), int(playerteam[t][6])], int(playerteam[t][7]),int(playerteam[t][8])))
-
+    PlayerTeam[-1].append(PIXELMON(playerteam[t][0], [int(playerteam[t][1]),int(playerteam[t][2]),int(playerteam[t][3]),int(playerteam[t][4]),int(playerteam[t][5]), int(playerteam[t][6]), int(playerteam[t][9])], int(playerteam[t][7]),int(playerteam[t][8])))
 
 
 class PLAYER():
@@ -214,7 +210,14 @@ def encounter(SCREEN, area):
     mon = PIXELMON(pixelmon_encountered,baseStats[pixelmon_encountered], random.choice(baseLevels[pixelmon_encountered]),0)
 
     PlayerCurrentMon = PlayerTeam[0][0]
-
+    if PlayerCurrentMon.curhealth <= 0:
+        if hasAtLeastOnePokemonLeft(PlayerTeam):                                    
+            PlayerCurrentMon = getNextPokemon(PlayerTeam)
+            player_hp = PlayerCurrentMon.curhealth
+            player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
+            player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)  
+        else:
+            return 0
 
     hp = mon.curhealth
     hp_label = mainFont.render("HP: "+str(hp),True,((0,0,0)))
@@ -333,7 +336,7 @@ collidableObjects = ["basicbush.png","basictree.png","basicfence.png","largetree
 pixelEncounterObjects = ["tallgrass.png"]
 
 curOffsetX = -300
-curOffsetY = -100
+curOffsetY = -60
 
 desiredMoveX = 0
 desiredMoveY = 0
@@ -446,8 +449,6 @@ print(PlayerTeam)
 with open("team.txt","w") as teamFile:
     
     for m in range(len(PlayerTeam)):
-        print(PlayerTeam)
-        print(PlayerTeam[0])
 
         teamFile.write("#")
         teamFile.write(PlayerTeam[m][0].pixelmon_name)
@@ -484,5 +485,10 @@ with open("team.txt","w") as teamFile:
         teamFile.write("#")
         teamFile.write(str(PlayerTeam[m][0].exp))
         teamFile.write("#")
+
+        teamFile.write("#")
+        teamFile.write(str(PlayerTeam[m][0].maxhealth))
+        teamFile.write("#")
+
 
 pygame.quit()
