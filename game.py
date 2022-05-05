@@ -175,7 +175,6 @@ def calculateChance(steps):
 
 def encounter(SCREEN, area):
      
-    # Play The Animation
 
     xx = 0
     xX = WIDTH-WIDTH//10
@@ -205,8 +204,6 @@ def encounter(SCREEN, area):
     PlayerCurrentMon = PlayerTeam[0][0]
 
 
-    # MAKE UI CONTENT
-
     hp = mon.maxhealth
     hp_label = mainFont.render("HP: "+str(hp),True,((0,0,0)))
     hp_label_pos = (WIDTH-WIDTH//3,HEIGHT//8)
@@ -227,7 +224,6 @@ def encounter(SCREEN, area):
     attackbuttonrect = (WIDTH-attackbuttonwidth*1.5,HEIGHT-HEIGHT//6,attackbuttonwidth,HEIGHT//7)
     attackbuttonlabel = mainFont.render("attack", True, ((0,0,0)))
 
-    # Start Encounter
     turn = ""
     if PlayerCurrentMon.speed >= mon.speed:
         turn = "player"
@@ -236,8 +232,6 @@ def encounter(SCREEN, area):
 
     wait = False
     victory = False
-
-    #print(pixelmon_encountered)
 
     run = True
     while run:
@@ -261,21 +255,21 @@ def encounter(SCREEN, area):
                             pygame.mixer.music.load("music/110 Wild Pokemon Defeated!.wav")
                             pygame.mixer.music.play()
                             victory = True
-                        PlayerCurrentMon.curhealth -= 5
-                        player_hp = PlayerCurrentMon.curhealth
-                        player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
-                        player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)     
-                        if PlayerCurrentMon.curhealth <= 0:
-                            if len(PlayerTeam)-1 > 0:
-                                PlayerCurrentMon = PlayerTeam[0][1]
+                        if not victory:
+                            PlayerCurrentMon.curhealth -= 5
+                            player_hp = PlayerCurrentMon.curhealth
+                            player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
+                            player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)     
+                            if PlayerCurrentMon.curhealth <= 0:
+                                if len(PlayerTeam)-1 > 0:
+                                    PlayerCurrentMon = PlayerTeam[0][1]
                     else:
                         PlayerCurrentMon.curhealth -= 5
                         player_hp = PlayerCurrentMon.curhealth
                         player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
                         player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)       
                         if PlayerCurrentMon.curhealth <= 0:
-                            if len(PlayerTeam)-1 > 0:
-                                PlayerCurrentMon = PlayerTeam[0][1]
+                            pass    
                         mon.curhealth-=5
                         if mon.curhealth < 0:
                             mon.curhealth = 0
@@ -298,17 +292,9 @@ def encounter(SCREEN, area):
         SCREEN.blit(player_name_label, player_name_label_pos)
         SCREEN.blit(enemy_name_label, enemy_name_label_pos)
 
-        # FIGHT WILD POKEMON
-
-        
-
-        
-        # 
-
 
         pygame.display.update()
 
-    #
 
     return 0
 
