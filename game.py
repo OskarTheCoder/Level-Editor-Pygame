@@ -41,16 +41,16 @@ with open("team.txt", "r") as team:
                     if  i > 8:
                         playerteam.append(curPixelMon)
                         curPixelMon = []
+                        i = 0
 
                 else:
                     curStat += char
-
 print(playerteam)
 PlayerTeam = []
 for t in range(len(playerteam)):
     PlayerTeam.append([])
-    PlayerTeam[-1].append(PIXELMON(playerteam[t][0], [int(playerteam[t][1]),int(playerteam[t][2]),int(playerteam[t][3]),int(playerteam[t][4]),int(playerteam[t][5]), int(playerteam[t][6])], int(playerteam[t][7]),-1000))
-    print(PlayerTeam[-1][-1].level)
+    print(playerteam[t][1])
+    PlayerTeam[-1].append(PIXELMON(playerteam[t][0], [int(playerteam[t][1]),int(playerteam[t][2]),int(playerteam[t][3]),int(playerteam[t][4]),int(playerteam[t][5]), int(playerteam[t][6])], int(playerteam[t][7]),int(playerteam[t][8])))
 
 
 
@@ -114,6 +114,20 @@ class PLAYER():
 
     def collision(self, other):
         return pygame.rect.Rect.colliderect(self.img.get_rect(topleft=(self.pos[0],self.pos[1])), other)
+    
+def hasAtLeastOnePokemonLeft(list):
+    print(list)
+    for m in range(len(list)):
+        if list[m][0].curhealth > 0:
+            return True
+    print("False")
+    return False
+
+def getNextPokemon(list):
+    for m in range(len(PlayerTeam)):
+        if list[m][0].curhealth > 0:
+            return list[m][0]
+
 
 # Load Tiles
 tiles = []
@@ -152,7 +166,6 @@ for r in range(1,len(tiles)):
 for g in tilezToRemove:
     tiles.remove(g)
 
-#print(tiles)
 
 steps = 0
 
@@ -196,22 +209,21 @@ def encounter(SCREEN, area):
         pygame.display.update()
         time.sleep(0.5)   
     
-    #
 
     pixelmon_encountered = getPixelmon(area)
-    mon = PIXELMON(pixelmon_encountered,baseStats[pixelmon_encountered], random.choice(baseLevels[pixelmon_encountered]),-1000)
+    mon = PIXELMON(pixelmon_encountered,baseStats[pixelmon_encountered], random.choice(baseLevels[pixelmon_encountered]),0)
 
     PlayerCurrentMon = PlayerTeam[0][0]
 
 
-    hp = mon.maxhealth
+    hp = mon.curhealth
     hp_label = mainFont.render("HP: "+str(hp),True,((0,0,0)))
     hp_label_pos = (WIDTH-WIDTH//3,HEIGHT//8)
 
     enemy_name_label = mainFont.render(str(mon.pixelmon_name)+" Lvl "+str(mon.level),True,((0,0,0)))
     enemy_name_label_pos = (WIDTH-WIDTH//3,HEIGHT//8-60)
 
-    player_hp = PlayerCurrentMon.maxhealth
+    player_hp = PlayerCurrentMon.curhealth
     player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
     player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)
 
@@ -261,15 +273,23 @@ def encounter(SCREEN, area):
                             player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
                             player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)     
                             if PlayerCurrentMon.curhealth <= 0:
-                                if len(PlayerTeam)-1 > 0:
-                                    PlayerCurrentMon = PlayerTeam[0][1]
+                                if hasAtLeastOnePokemonLeft(PlayerTeam):                                    
+                                    PlayerCurrentMon = getNextPokemon(PlayerTeam)
+                                    player_hp = PlayerCurrentMon.curhealth
+                                    player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
+                                    player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)       
                     else:
                         PlayerCurrentMon.curhealth -= 5
                         player_hp = PlayerCurrentMon.curhealth
                         player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
                         player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)       
                         if PlayerCurrentMon.curhealth <= 0:
-                            pass    
+                            if hasAtLeastOnePokemonLeft(PlayerTeam):
+                                print("here")
+                                PlayerCurrentMon = getNextPokemon(PlayerTeam)
+                                player_hp = PlayerCurrentMon.curhealth
+                                player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
+                                player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)       
                         mon.curhealth-=5
                         if mon.curhealth < 0:
                             mon.curhealth = 0
@@ -358,8 +378,8 @@ while(running):
     # Draw Tiles
     for t in tiles:
         ImageSource = t[2];
-        PosX = int(t[0])+curOffsetX #Offset  +dif
-        PosY = int(t[1])+curOffsetY #OffsetY +difY
+        PosX = int(t[0])+curOffsetX 
+        PosY = int(t[1])+curOffsetY
         img = pygame.image.load(f"graphics/{ImageSource}")
         rect = img.get_rect(topleft=(PosX+desiredMoveX,PosY+desiredMoveY))
         if ImageSource in collidableObjects:
@@ -422,44 +442,47 @@ while(running):
     pygame.display.update()
     clock.tick(40)
 
-
+print(PlayerTeam)
 with open("team.txt","w") as teamFile:
     
-    for member in PlayerTeam[0]:
+    for m in range(len(PlayerTeam)):
+        print(PlayerTeam)
+        print(PlayerTeam[0])
+
         teamFile.write("#")
-        teamFile.write(member.pixelmon_name)
+        teamFile.write(PlayerTeam[m][0].pixelmon_name)
         teamFile.write("#")
 
         teamFile.write("#")
-        teamFile.write(str(member.curhealth))
+        teamFile.write(str(PlayerTeam[m][0].curhealth))
         teamFile.write("#")
 
         teamFile.write("#")
-        teamFile.write(str(member.attack))
+        teamFile.write(str(PlayerTeam[m][0].attack))
         teamFile.write("#")
 
         teamFile.write("#")
-        teamFile.write(str(member.defence))
+        teamFile.write(str(PlayerTeam[m][0].defence))
         teamFile.write("#")
 
         teamFile.write("#")
-        teamFile.write(str(member.spec_attack))
+        teamFile.write(str(PlayerTeam[m][0].spec_attack))
         teamFile.write("#")
 
         teamFile.write("#")
-        teamFile.write(str(member.spec_defence))
+        teamFile.write(str(PlayerTeam[m][0].spec_defence))
         teamFile.write("#")
 
         teamFile.write("#")
-        teamFile.write(str(member.speed))
+        teamFile.write(str(PlayerTeam[m][0].speed))
         teamFile.write("#")
 #abra##25##20##15##105##55##90##15##0#
         teamFile.write("#")
-        teamFile.write(str(member.level))
+        teamFile.write(str(PlayerTeam[m][0].level))
         teamFile.write("#")
 
         teamFile.write("#")
-        teamFile.write(str(member.exp))
+        teamFile.write(str(PlayerTeam[m][0].exp))
         teamFile.write("#")
 
 pygame.quit()
