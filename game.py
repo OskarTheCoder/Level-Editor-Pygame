@@ -48,7 +48,7 @@ PlayerTeam = []
 for t in range(len(playerteam)):
     PlayerTeam.append([])
     PlayerTeam[-1].append(PIXELMON(playerteam[t][0], [int(playerteam[t][1]),int(playerteam[t][2]),int(playerteam[t][3]),int(playerteam[t][4]),int(playerteam[t][5]), int(playerteam[t][6]), int(playerteam[t][9])], int(playerteam[t][7]),int(playerteam[t][8])))
-
+    PlayerTeam[-1][-1].moves.append(MOVE("Psybeam", 9, "psychic"))
 
 class PLAYER():
     def __init__(self, pos, speed):
@@ -182,6 +182,13 @@ def calculateChance(steps):
     else:
         return False
 
+def waitUntilMouseClicked():
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        
+
 def encounter(SCREEN, area):
      
 
@@ -203,7 +210,7 @@ def encounter(SCREEN, area):
         yy += HEIGHT//10
         yY -= HEIGHT//10
         pygame.display.update()
-        time.sleep(0.5)   
+        time.sleep(0.5)
     
 
     pixelmon_encountered = getPixelmon(area)
@@ -215,7 +222,7 @@ def encounter(SCREEN, area):
             PlayerCurrentMon = getNextPokemon(PlayerTeam)
             player_hp = PlayerCurrentMon.curhealth
             player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
-            player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)  
+            player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3-200)
         else:
             return 0
 
@@ -228,16 +235,22 @@ def encounter(SCREEN, area):
 
     player_hp = PlayerCurrentMon.curhealth
     player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
-    player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)
+    player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3-200)
 
     player_name = PlayerCurrentMon.pixelmon_name
     player_name_label = mainFont.render(str(player_name)+" Lvl "+str(PlayerCurrentMon.level),True,((0,0,0)))
-    player_name_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3-60)
+    player_name_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3-60-200)
 
 
     attackbuttonwidth = WIDTH//4
-    attackbuttonrect = (WIDTH-attackbuttonwidth*1.5,HEIGHT-HEIGHT//6,attackbuttonwidth,HEIGHT//7)
+    attackbuttonrect = (WIDTH-attackbuttonwidth*1.5,HEIGHT-HEIGHT//6-200,attackbuttonwidth,HEIGHT//7)
     attackbuttonlabel = mainFont.render("attack", True, ((0,0,0)))
+
+    curMove = PlayerCurrentMon.moves[0]
+
+    actionText = "you encountered " + mon.pixelmon_name + "!"
+    action_label = mainFont.render(actionText,True,((255,255,255)))
+    action_label_pos = (WIDTH//2-action_label.get_width()//2,HEIGHT-90)
 
     turn = ""
     if PlayerCurrentMon.speed >= mon.speed:
@@ -247,6 +260,20 @@ def encounter(SCREEN, area):
 
     wait = False
     victory = False
+    
+    def updateCanvas():
+        SCREEN.fill((116,200,87))
+        SCREEN.blit(mon.img, (WIDTH-WIDTH//4,HEIGHT//5))
+        SCREEN.blit(PlayerCurrentMon.imgback, (WIDTH//4,HEIGHT-HEIGHT//5-200))
+        SCREEN.blit(hp_label, hp_label_pos)
+        SCREEN.blit(player_hp_label, player_hp_label_pos)
+        pygame.draw.rect(SCREEN, ((203,10,0)), attackbuttonrect)
+        SCREEN.blit(attackbuttonlabel, (attackbuttonrect[0]+32,attackbuttonrect[1]+32))    
+        SCREEN.blit(player_name_label, player_name_label_pos)
+        SCREEN.blit(enemy_name_label, enemy_name_label_pos)
+        pygame.draw.rect(SCREEN, ((123,123,123)), (0,HEIGHT-150,WIDTH,150))
+        SCREEN.blit(action_label,action_label_pos)
+        pygame.display.update()
 
     run = True
     while run:
@@ -260,64 +287,61 @@ def encounter(SCREEN, area):
                 mousePos = pygame.mouse.get_pos()
                 if not victory and not wait and pygame.rect.Rect.collidepoint(pygame.rect.Rect(attackbuttonrect[0],attackbuttonrect[1],attackbuttonrect[2],attackbuttonrect[3]), mousePos[0], mousePos[1]):
                     if turn == "player":
-                        mon.curhealth-=5
-                        if mon.curhealth <= 0:
+                        mon.curhealth-=curMove.pow
+                        action_label = mainFont.render("the wild " + mon.pixelmon_name + " took " + str(curMove.pow) + " damage!", True, ((255,255,255)))
+                        action_label_pos = (WIDTH//2-action_label.get_width()//2,HEIGHT-90)
+                        if mon.curhealth < 0:
                             mon.curhealth = 0
                         hp = mon.curhealth
                         hp_label = mainFont.render("HP: "+str(hp),True,((0,0,0)))
-                        hp_label_pos = (WIDTH-WIDTH//3,HEIGHT//8)
+                        updateCanvas()
+                        waitUntilMouseClicked()
                         if mon.curhealth <= 0:
                             pygame.mixer.music.load("music/110 Wild Pokemon Defeated!.wav")
                             pygame.mixer.music.play()
                             victory = True
                         if not victory:
-                            PlayerCurrentMon.curhealth -= 5
+                            PlayerCurrentMon.curhealth -= curMove.pow
+                            action_label = mainFont.render(PlayerCurrentMon.pixelmon_name + " took " + str(curMove.pow) + " damage!", True, ((255,255,255)))
+                            action_label_pos = (WIDTH//2-action_label.get_width()//2,HEIGHT-90)
                             player_hp = PlayerCurrentMon.curhealth
                             player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
-                            player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)     
+                            updateCanvas()
+                            waitUntilMouseClicked()
                             if PlayerCurrentMon.curhealth <= 0:
                                 if hasAtLeastOnePokemonLeft(PlayerTeam):                                    
                                     PlayerCurrentMon = getNextPokemon(PlayerTeam)
                                     player_hp = PlayerCurrentMon.curhealth
                                     player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
-                                    player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)       
                     else:
-                        PlayerCurrentMon.curhealth -= 5
+                        PlayerCurrentMon.curhealth -= curMove.pow
                         player_hp = PlayerCurrentMon.curhealth
                         player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
-                        player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)       
+                        action_label = mainFont.render(PlayerCurrentMon.pixelmon_name + " took " + str(curMove.pow) + " damage!", True, ((255,255,255)))
+                        action_label_pos = (WIDTH//2-action_label.get_width()//2,HEIGHT-90)
+                        updateCanvas()
+                        waitUntilMouseClicked()
                         if PlayerCurrentMon.curhealth <= 0:
                             if hasAtLeastOnePokemonLeft(PlayerTeam):
-                                print("here")
                                 PlayerCurrentMon = getNextPokemon(PlayerTeam)
                                 player_hp = PlayerCurrentMon.curhealth
                                 player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
-                                player_hp_label_pos = (WIDTH//5,HEIGHT-HEIGHT//3)       
-                        mon.curhealth-=5
-                        if mon.curhealth < 0:
-                            mon.curhealth = 0
+                        mon.curhealth-= curMove.pow
                         hp = mon.curhealth
                         hp_label = mainFont.render("HP: "+str(hp),True,((0,0,0)))
-                        hp_label_pos = (WIDTH-WIDTH//3,HEIGHT//8)
+                        action_label = mainFont.render("the wild " + mon.pixelmon_name + " took " + str(curMove.pow) + " damage!", True, ((255,255,255)))
+                        action_label_pos = (WIDTH//2-action_label.get_width()//2,HEIGHT-90)
+                        if mon.curhealth < 0:
+                            mon.curhealth = 0
+                        updateCanvas()
+                        waitUntilMouseClicked()
                         if mon.curhealth <= 0:
                             pygame.mixer.music.load("music/110 Wild Pokemon Defeated!.wav")
                             pygame.mixer.music.play()
                             victory = True
 
 
-        SCREEN.fill((116,200,87))
-        SCREEN.blit(mon.img, (WIDTH-WIDTH//4,HEIGHT//5))
-        SCREEN.blit(PlayerCurrentMon.imgback, (WIDTH//4,HEIGHT-HEIGHT//5))
-        SCREEN.blit(hp_label, hp_label_pos)
-        SCREEN.blit(player_hp_label, player_hp_label_pos)
-        pygame.draw.rect(SCREEN, ((203,10,0)), attackbuttonrect)
-        SCREEN.blit(attackbuttonlabel, (attackbuttonrect[0]+32,attackbuttonrect[1]+32))    
-        SCREEN.blit(player_name_label, player_name_label_pos)
-        SCREEN.blit(enemy_name_label, enemy_name_label_pos)
-
-
-        pygame.display.update()
-
+        updateCanvas()
 
     return 0
 
@@ -393,7 +417,7 @@ while(running):
                 mightAccounter = True
         
         SCREEN.blit(img,((PosX),(PosY)))
-    #
+    
         
     Player.draw(SCREEN)
 
