@@ -300,6 +300,10 @@ def encounter(SCREEN, area):
                             pygame.mixer.music.load("music/110 Wild Pokemon Defeated!.wav")
                             pygame.mixer.music.play()
                             victory = True
+                            action_label = mainFont.render("the wild " + mon.pixelmon_name + " was defeated!", True, ((255,255,255)))
+                            action_label_pos = (WIDTH//2-action_label.get_width()//2,HEIGHT-90)
+                            updateCanvas()
+                            waitUntilMouseClicked()
                         if not victory:
                             PlayerCurrentMon.curhealth -= curMove.pow
                             action_label = mainFont.render(PlayerCurrentMon.pixelmon_name + " took " + str(curMove.pow) + " damage!", True, ((255,255,255)))
@@ -313,6 +317,21 @@ def encounter(SCREEN, area):
                                     PlayerCurrentMon = getNextPokemon(PlayerTeam)
                                     player_hp = PlayerCurrentMon.curhealth
                                     player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
+                                else:
+                                    gameOverLabel = mainFont.render("GAME OVER", False, ((255,10,2)))
+                                    pygame.mixer.music.stop()
+                                    pygame.mixer.music.load("music/108 Help!.wav")
+                                    pygame.mixer.music.play(-1)
+                                    while True:
+                                        for event in pygame.event.get():
+                                            if event.type == pygame.QUIT:
+                                                return -1
+                                        
+                                        SCREEN.fill((0,0,0))
+                                        SCREEN.blit(gameOverLabel, (WIDTH//2-gameOverLabel.get_width()//2,HEIGHT//2-gameOverLabel.get_height()//2))
+                                        pygame.display.update()
+
+
                     else:
                         PlayerCurrentMon.curhealth -= curMove.pow
                         player_hp = PlayerCurrentMon.curhealth
@@ -326,6 +345,19 @@ def encounter(SCREEN, area):
                                 PlayerCurrentMon = getNextPokemon(PlayerTeam)
                                 player_hp = PlayerCurrentMon.curhealth
                                 player_hp_label = mainFont.render("HP: "+str(player_hp),True,((0,0,0)))
+                            else:
+                                gameOverLabel = mainFont.render("GAME OVER", False, ((255,10,2)))
+                                pygame.mixer.music.stop()
+                                pygame.mixer.music.load("music/108 Help!.wav")
+                                pygame.mixer.music.play(-1)
+                                while True:
+                                    for event in pygame.event.get():
+                                        if event.type == pygame.QUIT:
+                                            return -1
+                                    
+                                    SCREEN.fill((0,0,0))
+                                    SCREEN.blit(gameOverLabel, (WIDTH//2-gameOverLabel.get_width()//2,HEIGHT//2-gameOverLabel.get_height()//2))
+                                    pygame.display.update()
                         mon.curhealth-= curMove.pow
                         hp = mon.curhealth
                         hp_label = mainFont.render("HP: "+str(hp),True,((0,0,0)))
@@ -339,6 +371,10 @@ def encounter(SCREEN, area):
                             pygame.mixer.music.load("music/110 Wild Pokemon Defeated!.wav")
                             pygame.mixer.music.play()
                             victory = True
+                            action_label = mainFont.render("the wild " + mon.pixelmon_name + " was defeated!", True, ((255,255,255)))
+                            action_label_pos = (WIDTH//2-action_label.get_width()//2,HEIGHT-90)
+                            updateCanvas()
+                            waitUntilMouseClicked()
 
 
         updateCanvas()
